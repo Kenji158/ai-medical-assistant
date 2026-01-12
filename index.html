@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical Care</title>
+    <link rel="icon" type="image/x-icon" href="/images/first-aid-solid-24.png">
+
+    <!-- Particles.js Library -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0A2647, #144d79);
+            color: #E5D9B6;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+    
+        /* Full-screen background particles */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        .left-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .right-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #talkButton {
+            padding: 20px;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #C8AD7F, #A87D4E);
+            border-radius: 50%;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 10px rgba(200, 173, 127, 0.6);
+        }
+
+        #talkButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(200, 173, 127, 0.9);
+        }
+
+        #textInput, #textButton {
+            width: 300px;
+            padding: 12px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #E5D9B6;
+            background-color: #1A3A5F;
+            color: #E5D9B6;
+            outline: none;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        #textButton {
+            background: linear-gradient(135deg, #C8AD7F, #A87D4E);
+            cursor: pointer;
+        }
+
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            width: 80%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <div class="left-section">
+            <button id="talkButton">🎤 Press to Talk</button>
+        </div>
+        <div class="right-section">
+            <input type="text" id="textInput" placeholder="Type symptoms here...">
+            <button id="textButton">💬 Submit</button>
+        </div>
+    </div>
+    
+    <div id="results">
+        <p><strong>You said:</strong> <span id="userSaid">Waiting for input...</span></p>
+        <p><strong>Diagnosis:</strong> <span id="diagnosis"></span></p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let talkButton = document.getElementById("talkButton");
+            let textButton = document.getElementById("textButton");
+            let textInput = document.getElementById("textInput");
+            let diagnosisDiv = document.getElementById("diagnosis");
+            let userSaidDiv = document.getElementById("userSaid");
+
+            function getDiagnosis(inputText) {
+                userSaidDiv.innerText = inputText;
+                diagnosisDiv.innerText = "Analyzing...";
+                fetch("/run_ai", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ symptoms: inputText })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    diagnosisDiv.innerText = data.diagnosis || "No conditions matched.";
+                })
+                .catch(error => {
+                    diagnosisDiv.innerText = "Error connecting to AI.";
+                    console.error("Fetch error:", error);
+                });
+            }
+
+            talkButton.addEventListener("click", function () {
+    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+    recognition.start();
+
+    recognition.onresult = function (event) {
+        let transcript = event.results[0][0].transcript;
+        getDiagnosis(transcript);
+    };
+
+    recognition.onerror = function (event) {
+        console.error("Speech recognition error:", event.error);
+        diagnosisDiv.innerText = "Error recognizing speech.";
+    };
+});
+
+
+            textButton.addEventListener("click", function () {
+                let text = textInput.value.trim();
+                if (text) {
+                    getDiagnosis(text);
+                } else {
+                    diagnosisDiv.innerText = "Please enter symptoms before submitting.";
+                }
+            });
+        });
+        // ** FIXED PARTICLES.JS CONFIGURATION (INLINE) **
+        particlesJS("particles-js", {
+            "particles": {
+                "number": {
+                    "value": 80,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": { "value": "#0d1f57" },
+                "shape": {
+                    "type": "circle",
+                    "stroke": {
+                        "width": 0.5,
+                        "color": "#6678b1"
+                    },
+                    "polygon": { "nb_sides": 5 },
+                },
+                "opacity": {
+                    "value": 0.4734885849793636,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 40,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 240.5118091298284,
+                    "color": "#425cd9",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 6,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": { "enable": true, "mode": "repulse" },
+                    "onclick": { "enable": true, "mode": "push" },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": { "distance": 140, "line_linked": { "opacity": 1 } },
+                    "bubble": { "distance": 400, "size": 40, "duration": 2, "opacity": 8, "speed": 3 },
+                    "repulse": { "distance": 200, "duration": 0.4 },
+                    "push": { "particles_nb": 4 },
+                    "remove": { "particles_nb": 2 }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
+</body>
+</html>
